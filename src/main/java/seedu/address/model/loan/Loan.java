@@ -18,6 +18,9 @@ public abstract class Loan {
     /** Interest rate applied to the loan. */
     protected final InterestRate interestRate;
 
+    /** Description for the loan. **/
+    protected String description;
+
     /** The last date the loan amount was recalculated. */
     protected LocalDate lastRecalculatedDate;
 
@@ -26,10 +29,12 @@ public abstract class Loan {
      *
      * @param currAmount the initial loan amount
      * @param interestRate the interest rate applied to the loan
+     * @param description the description for the loan
      */
-    public Loan(double currAmount, InterestRate interestRate) {
+    public Loan(double currAmount, InterestRate interestRate, String description) {
         this.currAmount = currAmount;
         this.interestRate = interestRate;
+        this.description = description;
         this.lastRecalculatedDate = LocalDate.now();
     }
 
@@ -82,5 +87,13 @@ public abstract class Loan {
      */
     protected void updateLastRecalculatedDate() {
         this.lastRecalculatedDate = LocalDate.now();
+    }
+
+    public double getCurrAmount() {
+        return currAmount;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }

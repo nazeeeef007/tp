@@ -11,8 +11,8 @@ public class MonthlyLoan extends Loan {
      * @param currAmount the initial loan amount
      * @param interestRate the interest rate applied monthly
      */
-    public MonthlyLoan(double currAmount, InterestRate interestRate) {
-        super(currAmount, interestRate);
+    public MonthlyLoan(double currAmount, InterestRate interestRate, String description) {
+        super(currAmount, interestRate, description);
     }
 
     /**
