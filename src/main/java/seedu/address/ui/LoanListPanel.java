@@ -90,7 +90,7 @@ public class LoanListPanel extends UiPart<Region> {
             return;
         }
 
-        title.setText("Transactions (" + person.getLoans().size() + ") - " + person.getName().fullName);
+        title.setText(UiMessages.transactionsTitle(person.getLoans().size(), person.getName().fullName));
 
         ObservableList<Loan> items = FXCollections.observableArrayList();
         person.getLoans().stream()
