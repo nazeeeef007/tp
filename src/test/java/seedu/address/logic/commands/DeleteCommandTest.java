@@ -164,7 +164,7 @@ public class DeleteCommandTest {
 
         // different command type -> returns false
         assertFalse(deleteFirstCommand.equals(deleteFirstTransactionCommand));
-}
+    }
 
     @Test
     public void toStringMethod() {
