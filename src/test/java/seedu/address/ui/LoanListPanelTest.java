@@ -42,6 +42,17 @@ public class LoanListPanelTest {
     }
 
     @Test
+    public void descriptionText_returnsLoanDescription() {
+        Loan loan = new Loan(1, 0, "Dinner");
+        assertEquals("Dinner", LoanListPanel.descriptionText(loan));
+    }
+
+    @Test
+    public void descriptionText_null_throws() {
+        assertThrows(NullPointerException.class, () -> LoanListPanel.descriptionText(null));
+    }
+
+    @Test
     public void dateText_null_throws() {
         assertThrows(NullPointerException.class, () -> LoanListPanel.dateText(null));
     }
@@ -69,5 +80,17 @@ public class LoanListPanelTest {
         List<Loan> sorted = LoanListPanel.sortedLoans(Set.of(loanLow, loanMid, loanHigh));
         assertEquals(List.of(loanHigh, loanMid, loanLow), sorted);
     }
-}
 
+    @Test
+    public void oneBasedIndexOf_followsIndexOfSemantics() {
+        List<String> items = List.of("a", "b", "c");
+        assertEquals(1, LoanListPanel.oneBasedIndexOf(items, "a"));
+        assertEquals(3, LoanListPanel.oneBasedIndexOf(items, "c"));
+        assertEquals(0, LoanListPanel.oneBasedIndexOf(items, "x"));
+    }
+
+    @Test
+    public void oneBasedIndexOf_nullItems_throws() {
+        assertThrows(NullPointerException.class, () -> LoanListPanel.oneBasedIndexOf(null, "x"));
+    }
+}

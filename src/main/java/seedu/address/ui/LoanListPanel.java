@@ -68,26 +68,25 @@ public class LoanListPanel extends UiPart<Region> {
     @FXML
     private void initialize() {
         indexColumn.setCellValueFactory(cellData ->
-                new ReadOnlyObjectWrapper<>(loanTable.getItems().indexOf(cellData.getValue()) + 1));
+                indexCellValue(loanTable.getItems(), cellData.getValue()));
 
         typeColumn.setCellValueFactory(cellData -> {
-            double amount = cellData.getValue().getCurrAmount();
-            return new ReadOnlyStringWrapper(typeText(amount));
+            return new ReadOnlyStringWrapper(typeText(cellData.getValue().getCurrAmount()));
         });
         typeColumn.setCellFactory(col -> new TransactionTypeCell());
 
         amountColumn.setCellValueFactory(cellData -> {
-            double amount = cellData.getValue().getCurrAmount();
-            return new ReadOnlyStringWrapper(amountText(amount));
+            return new ReadOnlyStringWrapper(amountText(cellData.getValue().getCurrAmount()));
         });
 
         descriptionColumn.setCellValueFactory(cellData ->
-                new ReadOnlyStringWrapper(cellData.getValue().getDescription()));
+                new ReadOnlyStringWrapper(descriptionText(cellData.getValue())));
 
-        statusColumn.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(statusText()));
+        statusColumn.setCellValueFactory(cellData ->
+                new ReadOnlyStringWrapper(statusText()));
 
         dateColumn.setCellValueFactory(cellData ->
-                new ReadOnlyStringWrapper(dateText(cellData.getValue().getLastRecalculatedDate().toString())));
+                new ReadOnlyStringWrapper(dateText(cellData.getValue())));
     }
 
     /**
@@ -142,10 +141,19 @@ public class LoanListPanel extends UiPart<Region> {
     }
 
     /**
+     * Returns the description text shown in the table.
+     */
+    static String descriptionText(Loan loan) {
+        Objects.requireNonNull(loan);
+        return loan.getDescription();
+    }
+
+    /**
      * Returns the date text shown in the table.
      */
-    static String dateText(String dateString) {
-        return Objects.requireNonNull(dateString);
+    static String dateText(Loan loan) {
+        Objects.requireNonNull(loan);
+        return loan.getLastRecalculatedDate().toString();
     }
 
     /**
@@ -156,6 +164,19 @@ public class LoanListPanel extends UiPart<Region> {
         return StreamSupport.stream(loans.spliterator(), false)
                 .sorted(Comparator.comparingDouble(Loan::getCurrAmount).reversed())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Computes the 1-based index of {@code value} within {@code items}, using {@code List#indexOf}.
+     * Returns 0 if not found.
+     */
+    static int oneBasedIndexOf(List<?> items, Object value) {
+        Objects.requireNonNull(items);
+        return items.indexOf(value) + 1;
+    }
+
+    static ReadOnlyObjectWrapper<Number> indexCellValue(List<Loan> items, Loan value) {
+        return new ReadOnlyObjectWrapper<>(oneBasedIndexOf(items, value));
     }
 
     /**
