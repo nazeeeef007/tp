@@ -42,6 +42,10 @@ public class DeleteCommand extends Command {
         this(targetIndex, null);
     }
 
+    /**
+     * Creates a DeleteCommand to delete the person at the specified {@code targetIndex}
+     * and their transaction at the specified {@code targetTransactionIndex}.
+     */
     public DeleteCommand(Index targetIndex, Index targetTransactionIndex) {
         requireNonNull(targetIndex);
         this.targetIndex = targetIndex;
@@ -67,6 +71,9 @@ public class DeleteCommand extends Command {
         return deleteTransaction(model, personToModify);
     }
 
+    /**
+     * Deletes a specific transaction from the given {@code person}.
+     */
     private CommandResult deleteTransaction(Model model, Person person) throws CommandException {
         List<Loan> transactions = new ArrayList<>(person.getLoans());
         if (transactions.isEmpty()) {
@@ -85,7 +92,10 @@ public class DeleteCommand extends Command {
                 targetTransactionIndex.getOneBased()));
     }
 
-
+    /**
+     * Creates and returns a {@code Person} with the details of {@code person}
+     * but without {@code loanToRemove}.
+     */
     private static Person createPersonWithoutLoan(Person person, Loan loanToRemove) {
         Set<Loan> updatedLoans = new HashSet<>(person.getLoans());
         updatedLoans.remove(loanToRemove);
@@ -106,7 +116,8 @@ public class DeleteCommand extends Command {
         }
 
         DeleteCommand otherDeleteCommand = (DeleteCommand) other;
-        return targetIndex.equals(otherDeleteCommand.targetIndex) && Objects.equals(targetTransactionIndex, otherDeleteCommand.targetTransactionIndex);
+        return targetIndex.equals(otherDeleteCommand.targetIndex) && Objects.equals(targetTransactionIndex,
+                otherDeleteCommand.targetTransactionIndex);
     }
 
     @Override
