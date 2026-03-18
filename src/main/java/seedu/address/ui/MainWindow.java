@@ -2,8 +2,10 @@ package seedu.address.ui;
 
 import java.util.logging.Logger;
 
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
@@ -16,6 +18,7 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Person;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -32,6 +35,7 @@ public class MainWindow extends UiPart<Stage> {
 
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
+    private LoanListPanel loanListPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
@@ -45,10 +49,57 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane personListPanelPlaceholder;
 
     @FXML
+    private StackPane loanListPanelPlaceholder;
+
+    @FXML
     private StackPane resultDisplayPlaceholder;
 
     @FXML
+    private Label activeContactsLabel;
+
+    @FXML
     private StackPane statusbarPlaceholder;
+
+    interface ResultDisplaySink {
+        void setCommandSuccess(boolean isSuccess);
+        void setFeedbackToUser(String feedbackToUser);
+    }
+
+    static final class ResultDisplayUpdate {
+        private final boolean isSuccess;
+        private final String feedback;
+
+        private ResultDisplayUpdate(boolean isSuccess, String feedback) {
+            this.isSuccess = isSuccess;
+            this.feedback = feedback;
+        }
+
+        boolean isSuccess() {
+            return isSuccess;
+        }
+
+        String feedback() {
+            return feedback;
+        }
+    }
+
+    private static final class ResultDisplayAdapter implements ResultDisplaySink {
+        private final ResultDisplay resultDisplay;
+
+        private ResultDisplayAdapter(ResultDisplay resultDisplay) {
+            this.resultDisplay = resultDisplay;
+        }
+
+        @Override
+        public void setCommandSuccess(boolean isSuccess) {
+            resultDisplay.setCommandSuccess(isSuccess);
+        }
+
+        @Override
+        public void setFeedbackToUser(String feedbackToUser) {
+            resultDisplay.setFeedbackToUser(feedbackToUser);
+        }
+    }
 
     /**
      * Creates a {@code MainWindow} with the given {@code Stage} and {@code Logic}.
@@ -113,6 +164,13 @@ public class MainWindow extends UiPart<Stage> {
         personListPanel = new PersonListPanel(logic.getFilteredPersonList());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
+        loanListPanel = new LoanListPanel();
+        loanListPanelPlaceholder.getChildren().add(loanListPanel.getRoot());
+        personListPanel.setSelectionListener(loanListPanel::displayPerson);
+
+        updateActiveContactsCount();
+        logic.getFilteredPersonList().addListener((ListChangeListener<Person>) c -> updateActiveContactsCount());
+
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
 
@@ -121,6 +179,10 @@ public class MainWindow extends UiPart<Stage> {
 
         CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+    }
+
+    private void updateActiveContactsCount() {
+        activeContactsLabel.setText(UiMessages.activeContactsTitle(logic.getFilteredPersonList().size()));
     }
 
     /**
@@ -176,7 +238,8 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            applyResultUpdate(new ResultDisplayAdapter(resultDisplay),
+                    successUpdate(commandResult.getFeedbackToUser()));
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -189,8 +252,22 @@ public class MainWindow extends UiPart<Stage> {
             return commandResult;
         } catch (CommandException | ParseException e) {
             logger.info("An error occurred while executing command: " + commandText);
-            resultDisplay.setFeedbackToUser(e.getMessage());
+            applyResultUpdate(new ResultDisplayAdapter(resultDisplay),
+                    errorUpdate(e.getMessage()));
             throw e;
         }
+    }
+
+    static ResultDisplayUpdate successUpdate(String feedback) {
+        return new ResultDisplayUpdate(true, UiMessages.success(feedback));
+    }
+
+    static ResultDisplayUpdate errorUpdate(String message) {
+        return new ResultDisplayUpdate(false, UiMessages.error(message));
+    }
+
+    static void applyResultUpdate(ResultDisplaySink sink, ResultDisplayUpdate update) {
+        sink.setCommandSuccess(update.isSuccess());
+        sink.setFeedbackToUser(update.feedback());
     }
 }

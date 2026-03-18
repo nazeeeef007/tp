@@ -16,6 +16,33 @@ import seedu.address.model.person.Person;
 public class PersonCard extends UiPart<Region> {
 
     private static final String FXML = "PersonListCard.fxml";
+    private static final double NEAR_ZERO_THRESHOLD = 0.005;
+    private static final String STYLE_DEBTS_OWE = "debts-owe";
+    private static final String STYLE_DEBTS_LENT = "debts-lent";
+
+    static final class ActiveDebtsModel {
+        private final String amountText;
+        private final String suffixText;
+        private final String styleClass;
+
+        private ActiveDebtsModel(String amountText, String suffixText, String styleClass) {
+            this.amountText = amountText;
+            this.suffixText = suffixText;
+            this.styleClass = styleClass;
+        }
+
+        String getAmountText() {
+            return amountText;
+        }
+
+        String getSuffixText() {
+            return suffixText;
+        }
+
+        String getStyleClass() {
+            return styleClass;
+        }
+    }
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -40,7 +67,11 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label email;
     @FXML
-    private Label balance;
+    private Label debtsPrefix;
+    @FXML
+    private Label debtsAmount;
+    @FXML
+    private Label debtsSuffix;
     @FXML
     private FlowPane tags;
 
@@ -55,7 +86,7 @@ public class PersonCard extends UiPart<Region> {
         phone.setText(person.getPhone().value);
         address.setText(person.getAddress().value);
         email.setText(person.getEmail().value);
-        balance.setText(formatBalance(person));
+        setActiveDebts(person);
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
@@ -66,7 +97,7 @@ public class PersonCard extends UiPart<Region> {
                 .mapToDouble(Loan::getCurrAmount)
                 .sum();
 
-        if (person.getLoans().isEmpty() || Math.abs(total) < 0.005) {
+        if (person.getLoans().isEmpty() || Math.abs(total) < NEAR_ZERO_THRESHOLD) {
             return "Balance: $0.00";
         }
 
@@ -75,5 +106,31 @@ public class PersonCard extends UiPart<Region> {
         }
 
         return String.format("They owe you: $%.2f", Math.abs(total));
+    }
+
+    private void setActiveDebts(Person person) {
+        ActiveDebtsModel model = activeDebtsModelFor(person);
+        debtsAmount.getStyleClass().removeAll(STYLE_DEBTS_OWE, STYLE_DEBTS_LENT);
+        debtsAmount.setText(model.getAmountText());
+        debtsSuffix.setText(model.getSuffixText());
+        if (model.getStyleClass() != null) {
+            debtsAmount.getStyleClass().add(model.getStyleClass());
+        }
+    }
+
+    static ActiveDebtsModel activeDebtsModelFor(Person person) {
+        double total = person.getLoans().stream()
+                .mapToDouble(Loan::getCurrAmount)
+                .sum();
+
+        if (person.getLoans().isEmpty() || Math.abs(total) < NEAR_ZERO_THRESHOLD) {
+            return new ActiveDebtsModel("$0.00", "", null);
+        }
+
+        if (total > 0) {
+            return new ActiveDebtsModel(String.format("-$%.2f", total), "(Owe)", STYLE_DEBTS_OWE);
+        }
+
+        return new ActiveDebtsModel(String.format("+$%.2f", Math.abs(total)), "(Lent)", STYLE_DEBTS_LENT);
     }
 }
