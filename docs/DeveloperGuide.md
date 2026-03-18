@@ -265,7 +265,7 @@ _{Explain here how the data archiving feature will be implemented}_
 * has a need to manage a significant number of small to medium financial interactions (debts and loans) with various contacts
 * prefer using a dedicated desktop application over mobile apps or spreadsheets for financial logging
 * can type quickly and prefers keyboard shortcuts/commands over navigating nested menus with a mouse
-* prefer keeping financial data stored locally rather than on a cloud-based service.
+* prefer keeping financial data stored locally rather than on a cloud-based service
 * is reasonably comfortable using CLI applications and appreciates the precision of text-based input
 
 **Value proposition**: streamline debt and loan management by allowing users to record, track, and settle transactions significantly faster than traditional GUI-driven apps or manual ledger entries
