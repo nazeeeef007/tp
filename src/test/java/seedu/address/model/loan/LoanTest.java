@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 
 public class LoanTest {
@@ -111,6 +113,12 @@ public class LoanTest {
     public void getInterest_returnsCorrectRate() {
         Loan loan = new TestLoan(100, 7.5, "desc");
         assertEquals(7.5, loan.getInterest(), 0.001);
+    }
+
+    @Test
+    public void getLastRecalculatedDate_returnsNonNullDate() {
+        Loan loan = new TestLoan(100, 0, "desc");
+        assertEquals(LocalDate.now(), loan.getLastRecalculatedDate());
     }
 
     // ========== toString ==========

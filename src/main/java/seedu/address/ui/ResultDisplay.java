@@ -38,7 +38,11 @@ public class ResultDisplay extends UiPart<Region> {
      */
     public void setCommandSuccess(boolean isSuccess) {
         resultDisplay.getStyleClass().removeAll("result-success", "result-error");
-        resultDisplay.getStyleClass().add(isSuccess ? "result-success" : "result-error");
+        resultDisplay.getStyleClass().add(styleClassForCommandSuccess(isSuccess));
+    }
+
+    static String styleClassForCommandSuccess(boolean isSuccess) {
+        return isSuccess ? "result-success" : "result-error";
     }
 
 }

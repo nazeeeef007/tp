@@ -60,6 +60,47 @@ public class MainWindow extends UiPart<Stage> {
     @FXML
     private StackPane statusbarPlaceholder;
 
+    interface ResultDisplaySink {
+        void setCommandSuccess(boolean isSuccess);
+        void setFeedbackToUser(String feedbackToUser);
+    }
+
+    static final class ResultDisplayUpdate {
+        private final boolean isSuccess;
+        private final String feedback;
+
+        private ResultDisplayUpdate(boolean isSuccess, String feedback) {
+            this.isSuccess = isSuccess;
+            this.feedback = feedback;
+        }
+
+        boolean isSuccess() {
+            return isSuccess;
+        }
+
+        String feedback() {
+            return feedback;
+        }
+    }
+
+    private static final class ResultDisplayAdapter implements ResultDisplaySink {
+        private final ResultDisplay resultDisplay;
+
+        private ResultDisplayAdapter(ResultDisplay resultDisplay) {
+            this.resultDisplay = resultDisplay;
+        }
+
+        @Override
+        public void setCommandSuccess(boolean isSuccess) {
+            resultDisplay.setCommandSuccess(isSuccess);
+        }
+
+        @Override
+        public void setFeedbackToUser(String feedbackToUser) {
+            resultDisplay.setFeedbackToUser(feedbackToUser);
+        }
+    }
+
     /**
      * Creates a {@code MainWindow} with the given {@code Stage} and {@code Logic}.
      */
@@ -197,8 +238,8 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setCommandSuccess(true);
-            resultDisplay.setFeedbackToUser(UiMessages.success(commandResult.getFeedbackToUser()));
+            applyResultUpdate(new ResultDisplayAdapter(resultDisplay),
+                    successUpdate(commandResult.getFeedbackToUser()));
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -211,9 +252,22 @@ public class MainWindow extends UiPart<Stage> {
             return commandResult;
         } catch (CommandException | ParseException e) {
             logger.info("An error occurred while executing command: " + commandText);
-            resultDisplay.setCommandSuccess(false);
-            resultDisplay.setFeedbackToUser(UiMessages.error(e.getMessage()));
+            applyResultUpdate(new ResultDisplayAdapter(resultDisplay),
+                    errorUpdate(e.getMessage()));
             throw e;
         }
+    }
+
+    static ResultDisplayUpdate successUpdate(String feedback) {
+        return new ResultDisplayUpdate(true, UiMessages.success(feedback));
+    }
+
+    static ResultDisplayUpdate errorUpdate(String message) {
+        return new ResultDisplayUpdate(false, UiMessages.error(message));
+    }
+
+    static void applyResultUpdate(ResultDisplaySink sink, ResultDisplayUpdate update) {
+        sink.setCommandSuccess(update.isSuccess());
+        sink.setFeedbackToUser(update.feedback());
     }
 }

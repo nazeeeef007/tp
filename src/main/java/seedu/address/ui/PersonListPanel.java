@@ -39,8 +39,13 @@ public class PersonListPanel extends UiPart<Region> {
      */
     public void setSelectionListener(Consumer<Person> listener) {
         requireNonNull(listener);
-        personListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
-                listener.accept(newValue));
+        personListView.getSelectionModel().selectedItemProperty().addListener(
+                selectionChangeListener(listener));
+    }
+
+    static javafx.beans.value.ChangeListener<Person> selectionChangeListener(Consumer<Person> listener) {
+        requireNonNull(listener);
+        return (observable, oldValue, newValue) -> listener.accept(newValue);
     }
 
     /**

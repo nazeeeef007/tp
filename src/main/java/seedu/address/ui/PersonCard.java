@@ -16,6 +16,33 @@ import seedu.address.model.person.Person;
 public class PersonCard extends UiPart<Region> {
 
     private static final String FXML = "PersonListCard.fxml";
+    private static final double NEAR_ZERO_THRESHOLD = 0.005;
+    private static final String STYLE_DEBTS_OWE = "debts-owe";
+    private static final String STYLE_DEBTS_LENT = "debts-lent";
+
+    static final class ActiveDebtsModel {
+        private final String amountText;
+        private final String suffixText;
+        private final String styleClass;
+
+        private ActiveDebtsModel(String amountText, String suffixText, String styleClass) {
+            this.amountText = amountText;
+            this.suffixText = suffixText;
+            this.styleClass = styleClass;
+        }
+
+        String getAmountText() {
+            return amountText;
+        }
+
+        String getSuffixText() {
+            return suffixText;
+        }
+
+        String getStyleClass() {
+            return styleClass;
+        }
+    }
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -70,7 +97,7 @@ public class PersonCard extends UiPart<Region> {
                 .mapToDouble(Loan::getCurrAmount)
                 .sum();
 
-        if (person.getLoans().isEmpty() || Math.abs(total) < 0.005) {
+        if (person.getLoans().isEmpty() || Math.abs(total) < NEAR_ZERO_THRESHOLD) {
             return "Balance: $0.00";
         }
 
@@ -82,27 +109,28 @@ public class PersonCard extends UiPart<Region> {
     }
 
     private void setActiveDebts(Person person) {
+        ActiveDebtsModel model = activeDebtsModelFor(person);
+        debtsAmount.getStyleClass().removeAll(STYLE_DEBTS_OWE, STYLE_DEBTS_LENT);
+        debtsAmount.setText(model.getAmountText());
+        debtsSuffix.setText(model.getSuffixText());
+        if (model.getStyleClass() != null) {
+            debtsAmount.getStyleClass().add(model.getStyleClass());
+        }
+    }
+
+    static ActiveDebtsModel activeDebtsModelFor(Person person) {
         double total = person.getLoans().stream()
                 .mapToDouble(Loan::getCurrAmount)
                 .sum();
 
-        debtsAmount.getStyleClass().removeAll("debts-owe", "debts-lent");
-
-        if (person.getLoans().isEmpty() || Math.abs(total) < 0.005) {
-            debtsAmount.setText("$0.00");
-            debtsSuffix.setText("");
-            return;
+        if (person.getLoans().isEmpty() || Math.abs(total) < NEAR_ZERO_THRESHOLD) {
+            return new ActiveDebtsModel("$0.00", "", null);
         }
 
         if (total > 0) {
-            debtsAmount.setText(String.format("-$%.2f", total));
-            debtsAmount.getStyleClass().add("debts-owe");
-            debtsSuffix.setText("(Owe)");
-            return;
+            return new ActiveDebtsModel(String.format("-$%.2f", total), "(Owe)", STYLE_DEBTS_OWE);
         }
 
-        debtsAmount.setText(String.format("+$%.2f", Math.abs(total)));
-        debtsAmount.getStyleClass().add("debts-lent");
-        debtsSuffix.setText("(Lent)");
+        return new ActiveDebtsModel(String.format("+$%.2f", Math.abs(total)), "(Lent)", STYLE_DEBTS_LENT);
     }
 }
