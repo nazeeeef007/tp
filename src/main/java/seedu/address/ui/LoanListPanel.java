@@ -33,6 +33,42 @@ public class LoanListPanel extends UiPart<Region> {
     private static final String STYLE_TX_OWE = "tx-type-owe";
     private static final String STYLE_TX_LENT = "tx-type-lent";
 
+    static final class DisplayModel {
+        private final String title;
+        private final List<Loan> loans;
+
+        private DisplayModel(String title, List<Loan> loans) {
+            this.title = title;
+            this.loans = loans;
+        }
+
+        String getTitle() {
+            return title;
+        }
+
+        List<Loan> getLoans() {
+            return loans;
+        }
+    }
+
+    static final class TypeCellModel {
+        private final String text;
+        private final String styleClass;
+
+        private TypeCellModel(String text, String styleClass) {
+            this.text = text;
+            this.styleClass = styleClass;
+        }
+
+        String getText() {
+            return text;
+        }
+
+        String getStyleClass() {
+            return styleClass;
+        }
+    }
+
     @FXML
     private Label title;
 
@@ -95,21 +131,15 @@ public class LoanListPanel extends UiPart<Region> {
      * @param person The selected person. If null, the panel resets to the no-selection state.
      */
     public void displayPerson(Person person) {
-        if (person == null) {
-            showNoSelection();
-            return;
-        }
-
-        title.setText(UiMessages.transactionsTitle(person.getLoans().size(), person.getName().fullName));
-
-        ObservableList<Loan> items = FXCollections.observableArrayList();
-        sortedLoans(person.getLoans()).forEach(items::add);
-        loanTable.setItems(items);
+        DisplayModel model = displayModelFor(person);
+        title.setText(model.getTitle());
+        loanTable.setItems(FXCollections.observableArrayList(model.getLoans()));
     }
 
     private void showNoSelection() {
-        title.setText(noSelectionTitle());
-        loanTable.setItems(FXCollections.observableArrayList());
+        DisplayModel model = displayModelFor(null);
+        title.setText(model.getTitle());
+        loanTable.setItems(FXCollections.observableArrayList(model.getLoans()));
     }
 
     /**
@@ -167,6 +197,20 @@ public class LoanListPanel extends UiPart<Region> {
     }
 
     /**
+     * Builds the display model for the given person.
+     * If {@code person} is null, returns the no-selection state.
+     */
+    static DisplayModel displayModelFor(Person person) {
+        if (person == null) {
+            return new DisplayModel(noSelectionTitle(), List.of());
+        }
+
+        String displayTitle = UiMessages.transactionsTitle(person.getLoans().size(), person.getName().fullName);
+        List<Loan> loans = sortedLoans(person.getLoans());
+        return new DisplayModel(displayTitle, loans);
+    }
+
+    /**
      * Computes the 1-based index of {@code value} within {@code items}, using {@code List#indexOf}.
      * Returns 0 if not found.
      */
@@ -197,6 +241,13 @@ public class LoanListPanel extends UiPart<Region> {
         return null;
     }
 
+    static TypeCellModel typeCellModel(String item, boolean empty) {
+        if (empty || item == null) {
+            return new TypeCellModel(null, null);
+        }
+        return new TypeCellModel(item, styleClassForType(item));
+    }
+
     private static class TransactionTypeCell extends TableCell<Loan, String> {
         @Override
         protected void updateItem(String item, boolean empty) {
@@ -204,15 +255,10 @@ public class LoanListPanel extends UiPart<Region> {
 
             getStyleClass().removeAll(STYLE_TX_OWE, STYLE_TX_LENT);
 
-            if (empty || item == null) {
-                setText(null);
-                return;
-            }
-
-            setText(item);
-            String styleClass = styleClassForType(item);
-            if (styleClass != null) {
-                getStyleClass().add(styleClass);
+            TypeCellModel model = typeCellModel(item, empty);
+            setText(model.getText());
+            if (model.getStyleClass() != null) {
+                getStyleClass().add(model.getStyleClass());
             }
         }
     }

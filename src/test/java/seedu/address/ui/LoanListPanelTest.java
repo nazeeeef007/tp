@@ -10,6 +10,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.loan.Loan;
+import seedu.address.testutil.PersonBuilder;
 
 public class LoanListPanelTest {
 
@@ -79,6 +80,42 @@ public class LoanListPanelTest {
 
         List<Loan> sorted = LoanListPanel.sortedLoans(Set.of(loanLow, loanMid, loanHigh));
         assertEquals(List.of(loanHigh, loanMid, loanLow), sorted);
+    }
+
+    @Test
+    public void displayModelFor_null_returnsNoSelection() {
+        LoanListPanel.DisplayModel model = LoanListPanel.displayModelFor(null);
+        assertEquals("Transactions - Select a person", model.getTitle());
+        assertEquals(List.of(), model.getLoans());
+    }
+
+    @Test
+    public void displayModelFor_person_buildsTitleAndSortedLoans() {
+        Loan loanHigh = new Loan(10, 0, "high");
+        Loan loanLow = new Loan(-5, 0, "low");
+        var person = new PersonBuilder().withName("Alex Yeoh").withLoans(loanLow, loanHigh).build();
+
+        LoanListPanel.DisplayModel model = LoanListPanel.displayModelFor(person);
+        assertEquals("Transactions (2) - Alex Yeoh", model.getTitle());
+        assertEquals(List.of(loanHigh, loanLow), model.getLoans());
+    }
+
+    @Test
+    public void typeCellModel_emptyOrNull_returnsNulls() {
+        LoanListPanel.TypeCellModel model = LoanListPanel.typeCellModel(null, true);
+        assertNull(model.getText());
+        assertNull(model.getStyleClass());
+    }
+
+    @Test
+    public void typeCellModel_setsStyleClassForRecognisedTypes() {
+        LoanListPanel.TypeCellModel owe = LoanListPanel.typeCellModel("Owe", false);
+        assertEquals("Owe", owe.getText());
+        assertEquals("tx-type-owe", owe.getStyleClass());
+
+        LoanListPanel.TypeCellModel lent = LoanListPanel.typeCellModel("Lent", false);
+        assertEquals("Lent", lent.getText());
+        assertEquals("tx-type-lent", lent.getStyleClass());
     }
 
     @Test
